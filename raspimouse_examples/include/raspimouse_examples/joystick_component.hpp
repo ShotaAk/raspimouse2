@@ -20,6 +20,9 @@ public:
 private:
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_;
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr sub_;
+    geometry_msgs::msg::Twist prevCmdVel_;
+
+    void publishCmdVel(const sensor_msgs::msg::Joy::SharedPtr msg);
 };
 
 } // namespace joystick
