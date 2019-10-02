@@ -15,17 +15,21 @@ namespace joystick
 JoystickComponent::JoystickComponent(const rclcpp::NodeOptions & options)
     : Node("joystick", options)
 {
-    pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    pubCmdVel_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    pubBuzzer_ = create_publisher<std_msgs::msg::Int16>("buzzer", 10);
 
     auto callback = 
         [this](const sensor_msgs::msg::Joy::SharedPtr msg) -> void
         {
             publishCmdVel(msg);
+            publishBuzzer(msg);
         };
     sub_ = create_subscription<sensor_msgs::msg::Joy>("joy", 10, callback);
 }
 
 void JoystickComponent::publishCmdVel(const sensor_msgs::msg::Joy::SharedPtr msg){
+    // スティック操作でcmd_velを生成する
+    // 左スティックが前後速度、右スティックが左右速度
     // joyの受信周期は約20Hz
     
     const double frame_rate = 20.0; // Hz
@@ -56,8 +60,18 @@ void JoystickComponent::publishCmdVel(const sensor_msgs::msg::Joy::SharedPtr msg
     // 前回速度を保存
     prevCmdVel_ = cmd_vel;
 
-    pub_->publish(cmd_vel);
+    pubCmdVel_->publish(cmd_vel);
 }
+
+void JoystickComponent::publishBuzzer(const sensor_msgs::msg::Joy::SharedPtr msg){
+    std_msgs::msg::Int16 buzzerHz;
+    if(msg->buttons[0]){
+        buzzerHz.data = 440 + 440*std::fabs(msg->axes[3]);
+    }
+
+    pubBuzzer_->publish(buzzerHz);
+}
+
 
 } // namespace joystick
 
